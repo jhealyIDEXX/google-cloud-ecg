@@ -14,7 +14,7 @@ import numpy as np
 
 LABEL_DICT = {0: 'normal', 1: 'abnormal'}
 
-def create_model(input_dim, n_classes, units_arr=[1024, 1024, 512, 512], lr=0.001):
+def create_model(input_dim, n_classes, units_arr=[1024, 1024, 512, 512], lr=0.001, loss='binary_crossentropy'):
     '''
     TODO: Unit Test
     creates keras sequential model, compiles it and returns it
@@ -39,7 +39,15 @@ def compile_model(model, lr, loss='binary_crossentropy'):
     model.compile(loss=loss, optimizer=Adam(lr=lr), metrics=['accuracy'])
     return model
 
-def generate_inputs(dataFile, window_size=600):
+def normalize(data, mean=None, stdev=None):
+    if mean == None:
+        mean = np.mean(data, axis=0)
+    if stdev == None:
+        stdev = np.mean(data, axis=0)
+        
+    return (data - mean) / stdev
+
+def generate_inputs(dataFile, channel_used=0, window_size=600):
     '''
     TODO: Unit Test
     generate input arrays
@@ -58,7 +66,8 @@ def generate_inputs(dataFile, window_size=600):
         data = json.loads(data)
         for obj in data:
             obj = json.loads(obj)
-            signal = obj['signal']
+            channels = obj['channels']
+            signal = channels[channel_used]
             if  signal < window_size:
                 continue
             if signal > window_size:
