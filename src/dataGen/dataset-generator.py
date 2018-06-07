@@ -146,7 +146,7 @@ def dcm_datasetFromFolder(dataFolder, window_size, savePath):
                     if samples == None:
                         continue
                     for sample in samples:
-                        data.append(sample)
+                        data.append(sample.jsonify())
                 except ValueError:
                     continue
                 except pydicom.errors.InvalidDicomError:
@@ -157,15 +157,15 @@ def dcm_datasetFromFolder(dataFolder, window_size, savePath):
                     if samples == None:
                         continue
                     for sample in samples:
-                        data.append(sample)
+                        data.append(sample.jsonify())
                 except ValueError:
                     continue
                 except pydicom.errors.InvalidDicomError:
                     continue
     print(savePath)
+
     with open(savePath, 'w+') as f:
-        for ecg in data:
-            json.dump(ecg.jsonify(), f, indent=4)
+        f.write(json.dumps(data, indent=4))
 
     
 
