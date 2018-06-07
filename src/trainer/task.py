@@ -4,7 +4,7 @@ Created on Jun 6, 2018
 @author: jhealy
 '''
 
-import model
+import src.trainer.model as model
 import numpy as np
 import os
 import errno
