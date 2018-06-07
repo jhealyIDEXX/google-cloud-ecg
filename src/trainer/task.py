@@ -11,8 +11,11 @@ import errno
 from sklearn.model_selection import train_test_split
 from keras.callbacks import TensorBoard, ModelCheckpoint, EarlyStopping
 from numpy.f2py.crackfortran import verbose
+<<<<<<< HEAD
 import argparse
 from ctypes.wintypes import SIZE
+=======
+>>>>>>> e1300ce053a22023e2a0610f3751672ae91494cb
 
 def train_main(data, output_dir, tboard_dir, batch_size, n_epochs=200, window_size=600):
     
@@ -63,3 +66,4 @@ if __name__ == '__main__':
     train_data = str(args.train-files)
     output_dir = str(args.job-dir)
     train_main(train_data, output_dir, 'tensorboard/{}'.format(output_dir), args.batch-size)
+
