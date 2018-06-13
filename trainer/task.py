@@ -59,7 +59,7 @@ if __name__ == '__main__':
                         default=64,
                         help='batch size')
     args = parser.parse_args()
-    train_data = str(args.train-files)
-    output_dir = str(args.job-dir)
-    train_main(train_data, output_dir, 'tensorboard/{}'.format(output_dir), args.batch-size)
+    train_data = args.train_files[0]
+    output_dir = args.job_dir[0]
+    train_main(train_data, output_dir, 'tensorboard/{}'.format(output_dir), args.batch_size)
 
