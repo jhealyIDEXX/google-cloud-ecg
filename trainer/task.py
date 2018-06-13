@@ -15,6 +15,7 @@ import argparse
 
 def train_main(data, output_dir, tboard_dir, batch_size, n_epochs=200, window_size=600):
     
+    print('obj: {}, type: {}'.format(data, type(data))) 
     X, Y = model.generate_inputs(data)
     X = np.asarray(X)
     X = model.normalize(X)
@@ -59,7 +60,7 @@ if __name__ == '__main__':
                         default=64,
                         help='batch size')
     args = parser.parse_args()
-    train_data = args.train_files[0]
-    output_dir = args.job_dir[0]
+    train_data = str(args.train_files[0])
+    output_dir = str(args.job_dir[0])
     train_main(train_data, output_dir, 'tensorboard/{}'.format(output_dir), args.batch_size)
 

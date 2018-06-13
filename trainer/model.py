@@ -65,12 +65,12 @@ def generate_inputs(dataFile, channel_used=0, window_size=600):
         data = df.read()
         data = json.loads(data)
         for obj in data:
-            obj = json.loads(obj)
             channels = obj['channels']
-            signal = channels[channel_used]
-            if  signal < window_size:
+            signal = channels[str(channel_used)]
+            signal_len = len(signal)
+            if  signal_len < window_size:
                 continue
-            if signal > window_size:
+            if signal_len > window_size:
                 signal = signal[:600]
             signal = np.asarray(signal)    
             label = int(obj['label'])
