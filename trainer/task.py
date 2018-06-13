@@ -21,9 +21,9 @@ def train_main(data, output_dir, tboard_dir, batch_size, n_epochs=200, window_si
     
     x_train, x_test, y_train, y_test = train_test_split(X, Y, test_size=0.2, shuffle=True)
     
-    model = model.create_model(input_dim=(window_size, ), n_classes=2)
+    fc_model = model.create_model(input_dim=(window_size, ), n_classes=2)
     
-    epoch_savename = '{epoch:02d}-model.hdf5'
+    epoch_savename = '{epoch:02d}-fc_model.hdf5'
     epochs_dir = '{}/epochs'.format(output_dir)
     try:
         os.makedirs(epochs_dir)
@@ -31,7 +31,7 @@ def train_main(data, output_dir, tboard_dir, batch_size, n_epochs=200, window_si
         if e.errno != errno.EEXIST:
             raise
     
-    model_savename = 'best-model.hdf5'
+    model_savename = 'best-fc_model.hdf5'
     
     epochs = ModelCheckpoint('{}/{}'.format(epoch_savename, epochs_dir))
     bestModel = ModelCheckpoint('{}/{}'.format(output_dir, model_savename), monitor='val_acc', verbose=1, save_best_only=True, mode='max')
@@ -39,7 +39,7 @@ def train_main(data, output_dir, tboard_dir, batch_size, n_epochs=200, window_si
     earlystop = EarlyStopping(monitor='acc', patience=20)
     
     callbacks = [epochs, bestModel, tb, earlystop]
-    model.fit(x_train, y_train, verbose=1, 
+    fc_model.fit(x_train, y_train, verbose=1, 
               validation_data=(x_test, y_test), 
               callbacks=callbacks, 
               batch_size=batch_size, epochs=n_epochs)
