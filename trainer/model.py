@@ -14,20 +14,28 @@ import numpy as np
 
 LABEL_DICT = {0: 'normal', 1: 'abnormal'}
 
-def create_model(input_dim, n_classes, units_arr=[1024, 1024, 512, 512], lr=0.001, loss='binary_crossentropy'):
+def create_model(input_shape, n_classes, lr=0.001, loss='binary_crossentropy'):
     '''
     TODO: Unit Test
     creates keras sequential model, compiles it and returns it
     '''
     
     model = Sequential()
-    for units in units_arr:
-        model.add(Dense(units, input_dim=input_dim, activation='relu'))
-        
-        input_dim=units
+	model.add(Dense(1024, activation='relu', input_shape=input_shape))
+	model.add(Dropout(0.2))
+
+	model.add(Dense(1024, activation='relu'))
+	model.add(Dropout(0.2))
+
+	model.add(Dense(512, activation='relu'))
+	model.add(Dropout(0.2))
+
+	model.add(Dense(512, activation='relu'))
+
+
+	model.add(Dense(num_classes, activation='softmax'))
+	model = compile_model(model, lr, loss=loss)
     
-    model.add(Dense(n_classes, activation='softmax'))
-    compile_model(model, lr)
     return model
 
 def compile_model(model, lr, loss='binary_crossentropy'):
