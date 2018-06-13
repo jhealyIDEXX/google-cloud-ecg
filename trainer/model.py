@@ -7,7 +7,7 @@ implements a fully-connected keras sequential model for ecgs
 '''
 
 from keras.models import Sequential
-from keras.layers import Dense
+from keras.layers import Dense, Dropout
 from keras.optimizers import Adam
 import json
 import numpy as np
@@ -33,7 +33,7 @@ def create_model(input_shape, n_classes, lr=0.001, loss='binary_crossentropy'):
 	model.add(Dense(512, activation='relu'))
 
 
-	model.add(Dense(num_classes, activation='softmax'))
+	model.add(Dense(n_classes, activation='softmax'))
 	model = compile_model(model, lr, loss=loss)
 	
 	return model
@@ -68,7 +68,7 @@ def generate_inputs(dataFile, channel_used=0, window_size=600):
 	
 	X = []
 	Y = []
-	
+	n_classes = len(LABEL_DICT)
 	with open(dataFile, 'r') as df:
 		data = df.read()
 		data = json.loads(data)
@@ -81,9 +81,13 @@ def generate_inputs(dataFile, channel_used=0, window_size=600):
 			if signal_len > window_size:
 				signal = signal[:600]
 			signal = np.asarray(signal)	
+			onehot_label = []
+			for i in range(0, n_classes):
+				onehot_label.append(i)
 			label = int(obj['label'])
+			onehot_label[label] = 1
 			X.append(signal)
-			Y.append(label)
+			Y.append(onehot_label)
 	
 	if len(X) != len(Y):
 		raise ValueError('ERROR: mismatch in data and labels')

@@ -15,14 +15,13 @@ import argparse
 
 def train_main(data, output_dir, tboard_dir, batch_size, n_epochs=200, window_size=600):
     
-    print('obj: {}, type: {}'.format(data, type(data))) 
     X, Y = model.generate_inputs(data)
     X = np.asarray(X)
     X = model.normalize(X)
     
     x_train, x_test, y_train, y_test = train_test_split(X, Y, test_size=0.2, shuffle=True)
     
-    fc_model = model.create_model(input_dim=(window_size, ), n_classes=2)
+    fc_model = model.create_model(input_shape=(window_size, ), n_classes=2)
     
     epoch_savename = '{epoch:02d}-fc_model.hdf5'
     epochs_dir = '{}/epochs'.format(output_dir)
@@ -34,14 +33,14 @@ def train_main(data, output_dir, tboard_dir, batch_size, n_epochs=200, window_si
     
     model_savename = 'best-fc_model.hdf5'
     
-    epochs = ModelCheckpoint('{}/{}'.format(epoch_savename, epochs_dir))
+    epochs = ModelCheckpoint('{}/{}'.format(epochs_dir, epoch_savename))
     bestModel = ModelCheckpoint('{}/{}'.format(output_dir, model_savename), monitor='val_acc', verbose=1, save_best_only=True, mode='max')
     tb = TensorBoard(log_dir=tboard_dir)
     earlystop = EarlyStopping(monitor='acc', patience=20)
     
     callbacks = [epochs, bestModel, tb, earlystop]
-    fc_model.fit(x_train, y_train, verbose=1, 
-              validation_data=(x_test, y_test), 
+    fc_model.fit(np.array(x_train), np.array(y_train), verbose=1, 
+              validation_data=(np.array(x_test), np.array(y_test)), 
               callbacks=callbacks, 
               batch_size=batch_size, epochs=n_epochs)
 
@@ -61,6 +60,6 @@ if __name__ == '__main__':
                         help='batch size')
     args = parser.parse_args()
     train_data = str(args.train_files[0])
-    output_dir = str(args.job_dir[0])
+    output_dir = str(args.job_dir)
     train_main(train_data, output_dir, 'tensorboard/{}'.format(output_dir), args.batch_size)
 
