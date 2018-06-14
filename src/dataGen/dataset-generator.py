@@ -97,9 +97,8 @@ def dcm_process_abnormal(filename, markers, window_size):
         elif (start) < 0:
             continue
         else:
-            for channel in channels:
-                signal_channels.append(channel[start:end])
-            data.append(EcgObject(label=1, original_file=filename, signal_channels=signal_channels, startIndex=start, endIndex=end, markerIndex=marker)) 
+            signal_channels.append(channels[0][start:end])
+            data.append(EcgObject(label=1, original_file=filename, signal_channels=channels[0][start:end], startIndex=start, endIndex=end, markerIndex=marker)) 
                 
     return data
 
@@ -118,9 +117,7 @@ def dcm_process_normal(filename, window_size):
         signal_channels = []
         start = point-oneSideSamples
         end = point+oneSideSamples    
-        for channel in channels:
-            signal_channels.append(channel[start:end])
-        data.append(EcgObject(label=0, original_file=filename, signal_channels=signal_channels, startIndex=start, endIndex=end))
+        data.append(EcgObject(label=0, original_file=filename, signal_channels=channels[0][start:end], startIndex=start, endIndex=end))
         point = end
 
     return data
@@ -130,7 +127,8 @@ def dcm_datasetFromFolder(dataFolder, window_size, savePath):
     assumes datafolder with .dcms and a correlating .hea file in the same folder
     '''
     data = []
-    
+    normals = 0
+    abnormals = 1
     fileGlob = glob.glob(r'{}/*.dcm'.format(dataFolder))
     n_files = len(fileGlob)
     cfile = 1
@@ -149,6 +147,7 @@ def dcm_datasetFromFolder(dataFolder, window_size, savePath):
                         continue
                     for sample in samples:
                         data.append(sample.jsonify())
+                        abnormals = abnormals + 1
                 except ValueError:
                     continue
                 except pydicom.errors.InvalidDicomError:
@@ -160,6 +159,9 @@ def dcm_datasetFromFolder(dataFolder, window_size, savePath):
                         continue
                     for sample in samples:
                         data.append(sample.jsonify())
+                        normals = normals + 1
+                        if normals > 10000:
+                            break
                 except ValueError:
                     continue
                 except pydicom.errors.InvalidDicomError:
@@ -167,23 +169,7 @@ def dcm_datasetFromFolder(dataFolder, window_size, savePath):
     print(savePath)
     
     with open(savePath, 'w+') as f:
-        #savecount = 0
-        dots = 1
-        count = 1
-        for chunk in json.JSONEncoder().iterencode(data):
-            #just in here to make sure program hasn't halted
-            count = count+1
-            if count % 500 == 0:
-                dots=dots+1
-                if dots > 5:
-                    dots=1
-            dotstr = '.'*dots
-            sys.stdout.write('\rsaving{}'.format(dotstr))
-            sys.stdout.flush()    
-            f.write(chunk)
-            
-    sys.stdout.write('\rsaved...')
-    sys.stdout.flush()
+        f.write(json.dumps(data, indent=4))    
     
 
 if __name__ == '__main__':
@@ -198,7 +184,7 @@ if __name__ == '__main__':
                         help='file extension of signal files, supported: dcm, txt')
     parser.add_argument('--savePath',
                         type=str,
-                        default='dataset.json',
+                        default='test_dataset.json',
                         help='location of json file for dataset to be written to')    
     parser.add_argument('--window_size',
                         type=int,

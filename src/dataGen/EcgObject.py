@@ -45,13 +45,10 @@ class EcgObject(object):
         returns object in dict form 
         '''
         
-        signal_dict = {}
         data_dict = {}
-
-        for i in range(0,len(self.signal_channels)):
-            signal_dict[i] = self.signal_channels[i]
-
-        data_dict['channels'] = signal_dict
+        channels = {}
+        channels['0'] = self.signal_channels
+        data_dict['channels'] = channels
         data_dict['label'] = self.label
         data_dict['labelname'] = self.labelName
         data_dict['original_file'] = self.original_file
