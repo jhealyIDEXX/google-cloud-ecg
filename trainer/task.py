@@ -14,8 +14,9 @@ from numpy.f2py.crackfortran import verbose
 import argparse
 
 def train_main(data, output_dir, tboard_dir, batch_size, n_epochs=200, window_size=600):
-    
+    gcs = False
     X, Y = model.generate_inputs(data)
+    print('outputs generated')
     X = np.asarray(X)
     X = model.normalize(X)
     
@@ -23,8 +24,17 @@ def train_main(data, output_dir, tboard_dir, batch_size, n_epochs=200, window_si
     
     fc_model = model.create_model(input_shape=(window_size, ), n_classes=2)
     
+    if output_dir.startswith('gs://'):
+    	gcs = True
+
+	if gcs:
+		tboard_dir = 'tensorboard/{}'.format(output_dir[5:])
+	
+	
     epoch_savename = '{epoch:02d}-fc_model.hdf5'
     epochs_dir = '{}/epochs'.format(output_dir)
+    if gcs:
+    	epochs_dir='local_checkpoints/{}/'.format(output_dir[5:])
     try:
         os.makedirs(epochs_dir)
     except OSError as e:
@@ -35,6 +45,9 @@ def train_main(data, output_dir, tboard_dir, batch_size, n_epochs=200, window_si
     
     epochs = ModelCheckpoint('{}/{}'.format(epochs_dir, epoch_savename))
     bestModel = ModelCheckpoint('{}/{}'.format(output_dir, model_savename), monitor='val_acc', verbose=1, save_best_only=True, mode='max')
+    if gcs:
+    	bestModel = ModelCheckpoint('{}/{}'.format(output_dir[5:], model_savename), monitor='val_acc', verbose=1, save_best_only=True, mode='max')
+    	
     tb = TensorBoard(log_dir=tboard_dir)
     earlystop = EarlyStopping(monitor='acc', patience=20)
     

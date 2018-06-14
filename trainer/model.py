@@ -11,6 +11,8 @@ from keras.layers import Dense, Dropout
 from keras.optimizers import Adam
 import json
 import numpy as np
+import sys
+import tensorflow as tf 
 
 LABEL_DICT = {0: 'normal', 1: 'abnormal'}
 
@@ -69,7 +71,7 @@ def generate_inputs(dataFile, channel_used=0, window_size=600):
 	X = []
 	Y = []
 	n_classes = len(LABEL_DICT)
-	with open(dataFile, 'r') as df:
+	with tf.gfile.Open(dataFile) as df:
 		data = df.read()
 		data = json.loads(data)
 		for obj in data:
@@ -83,7 +85,7 @@ def generate_inputs(dataFile, channel_used=0, window_size=600):
 			signal = np.asarray(signal)	
 			onehot_label = []
 			for i in range(0, n_classes):
-				onehot_label.append(i)
+				onehot_label.append(0)
 			label = int(obj['label'])
 			onehot_label[label] = 1
 			X.append(signal)
