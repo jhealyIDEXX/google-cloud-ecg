@@ -1,0 +1,3 @@
+gcs stuff:
+	save tensorboard, weights in gs
+deploy predictor
