@@ -26,10 +26,20 @@ def train_main(data, output_dir, tboard_dir, batch_size, n_epochs=200, window_si
 	
 	if output_dir.startswith('gs://'):
 		gcs = True
+		try:
+			os.makedirs(output_dir[5:])
+		except OSError as e:
+			if e.errno != errno.EEXIST:
+				raise
 
 	if gcs:
 		tboard_dir = 'tensorboard/{}'.format(output_dir[5:])
-	
+		print('tboard_dir: {}'.format(tboard_dir))
+		try:
+			os.makedirs(tboard_dir)
+		except OSError as e:
+			if e.errno != errno.EEXIST:
+				raise
 	
 	epoch_savename = '{epoch:02d}-fc_model.hdf5'
 	epochs_dir = '{}/epochs'.format(output_dir)
