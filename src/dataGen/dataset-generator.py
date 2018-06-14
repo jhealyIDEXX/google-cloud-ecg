@@ -123,6 +123,8 @@ def dcm_process_normal(filename, window_size):
         data.append(EcgObject(label=0, original_file=filename, signal_channels=signal_channels, startIndex=start, endIndex=end))
         point = end
 
+    return data
+
 def dcm_datasetFromFolder(dataFolder, window_size, savePath):
     '''
     assumes datafolder with .dcms and a correlating .hea file in the same folder
@@ -163,10 +165,25 @@ def dcm_datasetFromFolder(dataFolder, window_size, savePath):
                 except pydicom.errors.InvalidDicomError:
                     continue
     print(savePath)
-
+    
     with open(savePath, 'w+') as f:
-        f.write(json.dumps(data, indent=4))
-
+        #savecount = 0
+        dots = 1
+        count = 1
+        for chunk in json.JSONEncoder().iterencode(data):
+            #just in here to make sure program hasn't halted
+            count = count+1
+            if count % 500 == 0:
+                dots=dots+1
+                if dots > 5:
+                    dots=1
+            dotstr = '.'*dots
+            sys.stdout.write('\rsaving{}'.format(dotstr))
+            sys.stdout.flush()    
+            f.write(chunk)
+            
+    sys.stdout.write('\rsaved...')
+    sys.stdout.flush()
     
 
 if __name__ == '__main__':
