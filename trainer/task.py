@@ -89,7 +89,9 @@ class ContinuousEval(Callback):
 
 def dispatch(
 	train_files,
+	label_files,
 	eval_files,
+	eval_labels,
 	job_dir,
 	train_steps,
 	eval_steps,
@@ -139,7 +141,16 @@ def dispatch(
 
 	callbacks = [checkpoint, tblog]
 
-	X, Y = model.generator_input(train_files)
+	X = []
+	Y = []
+	if train_files.endswith('txt'):
+		with open(train_files, 'rb') as f:
+			X = np.load(f)
+		with open(label_files, 'rb') as f:
+			Y = np.load(f)
+	else:
+		X, Y = model.generator_input(train_files)
+
 	X = np.asarray(X)
 	X = model.normalize(X)
 	x_train, x_val, y_train, y_val = train_test_split(X, Y, test_size=0.2, shuffle=True)
@@ -180,6 +191,10 @@ if __name__ == '__main__':
 	parser.add_argument('--job-dir', required=True, type=str,
 						help='GCS or local dir to write checkpoints and export model'
 						)
+	parser.add_argument('--label-files', type=str, default=None, 
+						help='optional, labels for training data if feeding in .txt')
+	parser.add_argument('--eval-labels', type=str, default=None,
+						help='optional, labels for eval data if feeding in .txt')
 	parser.add_argument('--train-steps', type=int, default=100,
 						help="""\
 					   Maximum number of training steps to perform
