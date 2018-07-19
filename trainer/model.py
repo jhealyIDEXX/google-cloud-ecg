@@ -77,8 +77,8 @@ def to_savedmodel(model, export_path):
 	builder = saved_model_builder.SavedModelBuilder(export_path)
 
 	signature = \
-		predict_signature_def(inputs={'input': model.inputs[0]},
-							  outputs={'income': model.outputs[0]})
+		predict_signature_def(inputs={'signal': model.inputs[0], 'key': int},
+							  outputs={'class': model.outputs[0]})
 
 	with K.get_session() as sess:
 		builder.add_meta_graph_and_variables(sess=sess,

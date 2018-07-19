@@ -107,7 +107,7 @@ def dispatch(
 	num_epochs,
 	checkpoint_epochs,
 	):
-
+	metadata = {}
 	ecg_model = model.model_fn(WINDOW_SIZE, CLASS_SIZE)
 	if type(train_files) == list:
 		train_files = str(train_files[0])
@@ -119,28 +119,9 @@ def dispatch(
   # Unhappy hack to work around h5py not being able to write to GCS.
   # Force snapshots and saves to local filesystem, then copy them over to GCS.
 
-	checkpoint_path = FILE_PATH
-	if not job_dir.startswith('gs://'):
-		checkpoint_path = os.path.join(job_dir, checkpoint_path)
-
+	
   # Model checkpoint callback
 
-	checkpoint = ModelCheckpoint(checkpoint_path, monitor='val_loss',
-								 verbose=1, period=checkpoint_epochs,
-								 mode='max')
-
-  # Continuous eval callback
-
-	#evaluation = ContinuousEval(eval_frequency, eval_files,
-	#							learning_rate, job_dir)
-
-  # Tensorboard logs callback
-
-	tblog = TensorBoard(log_dir=os.path.join(job_dir, 'logs'),
-						histogram_freq=0, write_graph=True,
-						embeddings_freq=0)
-
-	callbacks = [checkpoint, tblog]
 
 	X = []
 	Y = []
@@ -158,27 +139,56 @@ def dispatch(
 	else:
 		X, Y = model.generator_input(train_files)
 
+	run_info_file = '{}/run_information.json'.format(job_dir)
+	
 	X = np.asarray(X)
+	metadata['mean'] = list(np.mean(X, axis=0))
+	metadata['stdev'] = list(np.std(X, axis=0))
 	X = model.normalize(X)
 	x_train, x_val, y_train, y_val = train_test_split(X, Y, test_size=0.2, shuffle=True)
+	
+
+	checkpoint_path = FILE_PATH
+	if not job_dir.startswith('gs://'):
+		checkpoint_path = os.path.join(job_dir, checkpoint_path)
+	try:
+		checkpoint_path= os.path.join(job_dir, checkpoint_path)
+		os.makedirs(checkpoint_path)
+	except:
+		pass
+	
+	checkpoint = ModelCheckpoint(checkpoint_path, monitor='acc',
+								 verbose=1, period=checkpoint_epochs,
+								 mode='max')
+	tblog = TensorBoard(log_dir=os.path.join(job_dir, 'logs'),
+						histogram_freq=0, write_graph=True,
+						embeddings_freq=0)
+
+	callbacks = [checkpoint, tblog]
+
+	
 	ecg_model.fit(x_train, y_train, verbose=1, 
               validation_data=(x_val, y_val), 
               callbacks=callbacks, 
               batch_size=train_batch_size, epochs=num_epochs)
               
-
+	with tf.gfile.Open(run_info_file, 'w+') as f:
+		json.dump(metadata, f, indent=4)
+		f.close()
+	
   # Unhappy hack to work around h5py not being able to write to GCS.
   # Force snapshots and saves to local filesystem, then copy them over to GCS.
 
 	if job_dir.startswith('gs://'):
-		ecg_model.save(CENSUS_MODEL)
+		print('saving {}'.format(ECG_MODEL))
+		ecg_model.save(ECG_MODEL)
 		copy_file_to_gcs(job_dir, ECG_MODEL)
 	else:
 		ecg_model.save(os.path.join(job_dir, ECG_MODEL))
 
   # Convert the Keras model to TensorFlow SavedModel
 
-	model.to_savedmodel(ecg_model, os.path.join(job_dir, 'export'))
+	model.to_savedmodel(ecg_model, job_dir)
 
 
 # h5py workaround: copy local models over to GCS if the job_dir is GCS.
